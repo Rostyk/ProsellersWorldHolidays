@@ -1,0 +1,24 @@
+PODS:
+  - Bolts (1.1.3)
+  - FlurrySDK (5.4.0):
+    - FlurrySDK/FlurrySDK (= 5.4.0)
+  - FlurrySDK/FlurrySDK (5.4.0)
+  - Parse-iOS-SDK (1.3.0):
+    - Bolts (~> 1.1.2)
+  - RevMob (7.5.5)
+  - UIDevice-Hardware (0.1.4)
+
+DEPENDENCIES:
+  - FlurrySDK (~> 5.4.0)
+  - Parse-iOS-SDK (~> 1.3.0)
+  - RevMob (~> 7.5.5)
+  - UIDevice-Hardware (~> 0.1.4)
+
+SPEC CHECKSUMS:
+  Bolts: 3db0a875235e0c9042b013af13af0f00f79b102c
+  FlurrySDK: bed9e5598353f867508d164795a451e3ada92cb6
+  Parse-iOS-SDK: fb847b9d3e9444a27f78a81e9496de1cacefd1da
+  RevMob: 605b5c82b26643ecc40164524250b6cef004dc95
+  UIDevice-Hardware: 7f1d1aba15fa6a65959b449b4a0f8e0f42f674d7
+
+COCOAPODS: 0.35.0
