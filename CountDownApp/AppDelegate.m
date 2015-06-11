@@ -19,6 +19,8 @@
 #import "AdsViewController.h"
 #import "AdConsts.h"
 
+#import "FacebookFacade.h"
+
 NSLocale *DEVICE_LOCALE;
 NSLocale *ENGLISH_LOCALE;
 
@@ -765,6 +767,8 @@ NSLocale *ENGLISH_LOCALE;
 
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
+    [[[FacebookFacade sharedInstance] activeSession] handleDidBecomeActive];
+
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
     [AdManager didOpenApplication];
     
@@ -800,11 +804,6 @@ NSLocale *ENGLISH_LOCALE;
     }    
 }
 
-- (void)applicationWillTerminate:(UIApplication *)application
-{
-    // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
-}
-
 - (void)didCancelBanner
 {
     [self.window.rootViewController dismissViewControllerAnimated:YES
@@ -816,6 +815,34 @@ NSLocale *ENGLISH_LOCALE;
     [self.window.rootViewController dismissViewControllerAnimated:YES
                                                        completion:nil];
     
+}
+
+- (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url {
+    NSLog(@"application handleOpenURL: %@",url);
+    FBSession *session = [[FacebookFacade sharedInstance] activeSession];
+    if (session) {
+        return [session handleOpenURL:url];
+    }
+
+    return YES;
+}
+
+- (BOOL)application:(UIApplication*)application openURL:(NSURL*)url sourceApplication:(NSString*)sourceApplication annotation:(id)annotation {
+    if (!url) {
+        return NO;
+    }
+    NSLog(@"application handleOpenURL: %@",url);
+
+    BOOL urlHandled = [[FacebookFacade sharedInstance] handleOpenURL:url andSourceApplication:sourceApplication];
+    if(!urlHandled) {
+        urlHandled = [[FacebookFacade sharedInstance] handleOpenURL:url];
+    }
+
+    return YES;
+}
+
+- (void)applicationWillTerminate:(UIApplication *)application {
+    [[FacebookFacade sharedInstance] closeAndClearCache:YES];
 }
 
 @end

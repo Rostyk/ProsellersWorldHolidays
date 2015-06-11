@@ -1,6 +1,6 @@
 #include "Pods-RevMob.xcconfig"
 FRAMEWORK_SEARCH_PATHS = ${PODS_REVMOB_FRAMEWORK_SEARCH_PATHS}
 GCC_PREPROCESSOR_DEFINITIONS = $(inherited) COCOAPODS=1
-HEADER_SEARCH_PATHS = "${PODS_ROOT}/Headers/Build" "${PODS_ROOT}/Headers/Build/RevMob" "${PODS_ROOT}/Headers/Public" "${PODS_ROOT}/Headers/Public/Bolts" "${PODS_ROOT}/Headers/Public/FlurrySDK" "${PODS_ROOT}/Headers/Public/Parse-iOS-SDK" "${PODS_ROOT}/Headers/Public/RevMob" "${PODS_ROOT}/Headers/Public/UIDevice-Hardware"
+HEADER_SEARCH_PATHS = "${PODS_ROOT}/Headers/Build" "${PODS_ROOT}/Headers/Build/RevMob" "${PODS_ROOT}/Headers/Public" "${PODS_ROOT}/Headers/Public/FlurrySDK" "${PODS_ROOT}/Headers/Public/Parse-iOS-SDK" "${PODS_ROOT}/Headers/Public/RevMob" "${PODS_ROOT}/Headers/Public/UIDevice-Hardware"
 OTHER_LDFLAGS = ${PODS_REVMOB_OTHER_LDFLAGS} -ObjC
 PODS_ROOT = ${SRCROOT}

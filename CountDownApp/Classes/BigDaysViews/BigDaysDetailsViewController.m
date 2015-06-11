@@ -15,11 +15,18 @@
 #import "BDCommon.h"
 #import "BigDayPageViewController.h"
 
+#import "FacebookFacade.h"
+#import "MBProgressHUD.h"
+#import "AppManager.h"
+
+typedef void (^SimpleCallBack)();
+
 #define SLIDE_WIDTH         ([UIScreen mainScreen].bounds.size.width + 4)
 #define SLIDE_OFFSET        2
 
 @interface BigDaysDetailsViewController ()
-
+@property (strong, nonatomic) MBProgressHUD *downloadProgressHud;
+@property (strong, nonatomic) FacebookFacade *facebookFacade;
 @end
 
 @implementation BigDaysDetailsViewController
@@ -609,21 +616,6 @@
     [Flurry logEvent:@"BigDay_Edit"];
 }
 
-- (IBAction)onCancelShare:(id)sender
-{
-    [UIView beginAnimations:@"CancelShareView" context:nil];
-    [UIView setAnimationDuration:0.75];
-    
-    [UIView setAnimationDelegate:self];
-    [UIView setAnimationDidStopSelector:@selector(animationDidStop:finished:context:)];
-    
-    CGRect rctFrame = self.shareView.frame;
-    rctFrame.origin = CGPointMake(0, 800);
-    self.shareView.frame = rctFrame;
-    
-    [UIView commitAnimations];
-}
-
 - (IBAction)onCancelInfo:(id)sender
 {
     BigDayPageViewController *bigday = [arrayPageViews objectAtIndex:pageSlider.currentPage];
@@ -807,92 +799,121 @@
     [APP_DELEGATE.viewController dismissModalViewControllerAnimated:YES];
 }
 
-- (IBAction)onFacebook:(id)sender
-{
-    FacebookManager *myFacebook = [FacebookManager sharedInstance];
-	[myFacebook setDelegate:self];
-	if ([[myFacebook facebook] isSessionValid]) {
-		btnInfo.hidden = YES;
-        btnEdit.hidden = YES;
-        btnShare.hidden = YES;
-        
-        UIGraphicsBeginImageContext(self.view.bounds.size);
-        [self.view.layer renderInContext:UIGraphicsGetCurrentContext()];
-        UIImage *viewImage = UIGraphicsGetImageFromCurrentImageContext();
-        UIGraphicsEndImageContext();
-        
-        btnInfo.hidden = NO;
-        btnEdit.hidden = NO;
-        btnShare.hidden = NO;
-        
-        BigDayPageViewController *bigday = [arrayPageViews objectAtIndex:pageSlider.currentPage];
-        NSString *strBody = [NSString stringWithFormat:@"%@ is coming in %d days, %d hours, %d minutes, %d seconds!", bigday.lblName.text, bigday.dateFlipView.mFlipNumberViewDay.intValue, bigday.dateFlipView.mFlipNumberViewHour.intValue, bigday.dateFlipView.mFlipNumberViewMinute.intValue, bigday.dateFlipView.mFlipNumberViewSecond.intValue];
-		
-        [myFacebook postMessage:strBody andCaption:strBody andImage:viewImage];
-        
-        [[SHKActivityIndicator currentIndicator] displayActivity: NSLocalizedStringFromTable(@"Posting your Big Day...", @"Strings", @"")];
+- (IBAction)onFacebook:(id)sender {
+    [self onCancelShare:nil
+        completionBlock:^{
+            if (![AppManager sharedInstance].isLoginFromSocial) {
+                NSLog(@"[AppManager sharedInstance].isLoginFromSocial:%d",[AppManager sharedInstance].isLoginFromSocial);
+                UIAlertView *facebookNotify =  [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Facebook authentication", nil)
+                                                                          message:NSLocalizedString(@"For this actions you should login to Facebook", nil)
+                                                                         delegate:self
+                                                                cancelButtonTitle:NSLocalizedString(@"Cancel", nil)
+                                                                otherButtonTitles:NSLocalizedString(@"Login", nil), nil];
+                facebookNotify.tag = 200;
+                [facebookNotify show];
+            } else {
+                [self facebookLoginHandler];
+            }
+        }];
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+    if (alertView.tag == 200) {
+        if (buttonIndex == 1) {
+            [self facebookLoginHandler];
+        }
+    } else {
+        NSLog(@"Cancel Facebook Login");
     }
-    
+}
+
+- (void)facebookLoginHandler {
     [Flurry logEvent:@"BigDay_Facebook"];
+    self.downloadProgressHud.labelText = @"Posting...";
+    self.downloadProgressHud.detailsLabelText = @"";
+    [self.downloadProgressHud show:YES];
+    [self.facebookFacade openSessionWithCompletionHandler:^{
+        if ([self.facebookFacade isSessionOpen]) {
+            [self.facebookFacade startRequestForMeWithCompletionHandler:^(id result, NSError *error) {
+                NSLog(@"result:%@",result);
+                NSLog(@"error:%@",error);
+                if (!error) {
+                    btnInfo.hidden = YES;
+                    btnEdit.hidden = YES;
+                    btnShare.hidden = YES;
+                    self.downloadProgressHud.hidden = YES;
+                    UIGraphicsBeginImageContext(self.view.bounds.size);
+                    [self.view.layer renderInContext:UIGraphicsGetCurrentContext()];
+                    UIImage *viewImage = UIGraphicsGetImageFromCurrentImageContext();
+                    UIGraphicsEndImageContext();
+                    self.downloadProgressHud.hidden = NO;
+
+                    btnInfo.hidden = NO;
+                    btnEdit.hidden = NO;
+                    btnShare.hidden = NO;
+
+                    BigDayPageViewController *bigday = [arrayPageViews objectAtIndex:pageSlider.currentPage];
+                    NSString *strBody = [NSString stringWithFormat:@"%@ is coming in %d days, %d hours, %d minutes, %d seconds!",
+                                         bigday.lblName.text,
+                                         bigday.dateFlipView.mFlipNumberViewDay.intValue,
+                                         bigday.dateFlipView.mFlipNumberViewHour.intValue,
+                                         bigday.dateFlipView.mFlipNumberViewMinute.intValue,
+                                         bigday.dateFlipView.mFlipNumberViewSecond.intValue];
+
+                    NSLog(@"strBody:%@",strBody);
+
+                    [AppManager sharedInstance].isLoginFromSocial = YES;
+                    [[AppManager sharedInstance] saveLogin];
+
+                    [Flurry logEvent:@"BigDay_Facebook_Login_Success"];
+                    [self.facebookFacade postOpenGraphStoryWithImage:viewImage
+                                                           withTitle:strBody
+                                                     completionBlock:^{
+                                                         self.downloadProgressHud.detailsLabelText = NSLocalizedStringFromTable(@"Your Holiday has been posted successfully.", @"Strings", @"");
+                                                         [self.downloadProgressHud hide:YES afterDelay:3];
+                                                         [Flurry logEvent:@"BigDay_Facebook_Posted"];
+                                                     }
+                                                     andFailureBlock:^{
+                                                         self.downloadProgressHud.detailsLabelText = NSLocalizedStringFromTable(@"Failed posting your Holiday.", @"Strings", @"");
+                                                         [self.downloadProgressHud hide:YES afterDelay:3];                                                                 [Flurry logEvent:@"BigDay_Facebook_Post_Failed"];
+                                                     }];
+                }
+            }];
+        }
+    } andFailureBlock:^{
+        self.downloadProgressHud.detailsLabelText = NSLocalizedStringFromTable(@"Facebook Login Failed.", @"Strings", @"");
+        [self.downloadProgressHud hide:YES afterDelay:3];
+        [Flurry logEvent:@"BigDay_Facebook_Login_Failed"];
+    }];
 }
 
-- (void) messagePostedSuccessfully {
-    [[SHKActivityIndicator currentIndicator] hide];
-    [self showMessage:NSLocalizedStringFromTable(@"Your Big Day has been posted successfully.", @"Strings", @"")  title: @""];
-    
-    [Flurry logEvent:@"BigDay_Facebook_Posted"];
-}
-- (void) messagePostingFailedWithError:(NSError *)error {
-    [[SHKActivityIndicator currentIndicator] hide];
-    [self showMessage:NSLocalizedStringFromTable(@"Failed posting your Big Day.", @"Strings", @"")  title: @""];
-    
-    [Flurry logEvent:@"BigDay_Facebook_Post_Failed"];
+- (IBAction)onCancelShare:(id)sender {
+    [self onCancelShare:sender completionBlock:^{
+        NSLog(@"cancel");
+    }];
 }
 
-- (void) facebookLoginFailed {
-    [self showMessage:NSLocalizedStringFromTable(@"Facebook Login Failed.", @"Strings", @"")  title: @""];
-    
-    [Flurry logEvent:@"BigDay_Facebook_Login_Failed"];
+- (void)onCancelShare:(id)sender
+      completionBlock:(SimpleCallBack)completion {
+    [UIView animateWithDuration:0.75
+                          delay:0
+                        options:UIViewAnimationOptionTransitionCurlDown
+                     animations:^{
+                         CGRect rctFrame = self.shareView.frame;
+                         rctFrame.origin = CGPointMake(0, 800);
+                         self.shareView.frame = rctFrame;
+                     } completion:^(BOOL finished) {
+                         [self.shareView removeFromSuperview];
+                         BLOCK_SAFE_RUN(completion);
+                     }];
 }
 
--(void) facebookLoginSucceeded {
-    //NSLog(@"Login Success");
-    
-    [Flurry logEvent:@"BigDay_Facebook_Login_Success"];
-    
-    FacebookManager *myFacebook = [FacebookManager sharedInstance];
-	[myFacebook setDelegate:self];
-	if ([[myFacebook facebook] isSessionValid]) {
-		btnInfo.hidden = YES;
-        btnEdit.hidden = YES;
-        btnShare.hidden = YES;
-        
-        UIGraphicsBeginImageContext(self.view.bounds.size);
-        [self.view.layer renderInContext:UIGraphicsGetCurrentContext()];
-        UIImage *viewImage = UIGraphicsGetImageFromCurrentImageContext();
-        UIGraphicsEndImageContext();
-        
-        btnInfo.hidden = NO;
-        btnEdit.hidden = NO;
-        btnShare.hidden = NO;
-        
-        BigDayPageViewController *bigday = [arrayPageViews objectAtIndex:pageSlider.currentPage];
-        NSString *strBody = [NSString stringWithFormat:@"%@ is coming in %d days, %d hours, %d minutes, %d seconds!", bigday.lblName.text, bigday.dateFlipView.mFlipNumberViewDay.intValue, bigday.dateFlipView.mFlipNumberViewHour.intValue, bigday.dateFlipView.mFlipNumberViewMinute.intValue, bigday.dateFlipView.mFlipNumberViewSecond.intValue];
-		
-        [myFacebook postMessage:strBody andCaption:strBody andImage:viewImage];
-        
-        [[SHKActivityIndicator currentIndicator] displayActivity: NSLocalizedStringFromTable(@"Posting your Big Day...", @"Strings", @"")];
-    }
-}
-
-- (void) showMessage: (NSString*) message title:(NSString*) title
-{
+- (void) showMessage:(NSString *) message title:(NSString *) title {
     UIAlertView * alert = [[UIAlertView alloc] initWithTitle: title message: message delegate: nil cancelButtonTitle:NSLocalizedString(@"OK", nil) otherButtonTitles: nil];
     [alert show];
 }
 
-- (IBAction)onTwitter:(id)sender
-{
+- (IBAction)onTwitter:(id)sender {
     if ([TWTweetComposeViewController canSendTweet]) {
         TWTweetComposeViewController *controller = [[TWTweetComposeViewController alloc] init];
         
@@ -1099,6 +1120,23 @@
 - (void)revmobUserClickedInTheAd
 {
     
+}
+
+- (FacebookFacade *)facebookFacade {
+    if (!_facebookFacade) {
+        _facebookFacade = [FacebookFacade sharedInstance];
+    }
+    return _facebookFacade;
+}
+
+- (MBProgressHUD *)downloadProgressHud {
+    if (!_downloadProgressHud) {
+        _downloadProgressHud = [[MBProgressHUD alloc] initWithView:self.view];
+        [self.view addSubview:_downloadProgressHud];
+        _downloadProgressHud.labelText = @"Posting...";
+        _downloadProgressHud.mode = MBProgressHUDModeIndeterminate;
+    }
+    return _downloadProgressHud;
 }
 
 @end

@@ -10,10 +10,9 @@
 #import "../JDFlipNumberView/JDDateCountdownFlipView.h"
 #import <MessageUI/MFMailComposeViewController.h>
 #import <MessageUI/MFMessageComposeViewController.h>
-#import "FacebookManager.h"
 #import <RevMobAds/RevMobAds.h>
 
-@interface BigDaysDetailsViewController : BaseViewController <UIGestureRecognizerDelegate, MFMailComposeViewControllerDelegate, MFMessageComposeViewControllerDelegate, FacebookManagerDelegate, RevMobAdsDelegate>
+@interface BigDaysDetailsViewController : BaseViewController <UIGestureRecognizerDelegate, MFMailComposeViewControllerDelegate, MFMessageComposeViewControllerDelegate, RevMobAdsDelegate>
 {
     int nDayIndex;
     int nScrollIndex;
