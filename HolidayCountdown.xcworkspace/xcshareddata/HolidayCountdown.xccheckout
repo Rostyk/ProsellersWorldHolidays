@@ -15,7 +15,7 @@
 		<key>c9e4e011-17fd-45d7-a5a7-1b52a25985db++7349</key>
 		<string>https://tanzanite.unfuddle.com/svn/tanzanite_usagentapp/USAgent/Classes/Facebook</string>
 		<key>ea2ad293-1b71-4273-ab5d-9a81c1c204aa++2374</key>
-		<string>https://brians.unfuddle.com/svn/brians_tango/TongueTango/Tongue%2520Tango/en.lproj</string>
+		<string>https://brians.unfuddle.com/svn/brians_tango/TongueTango/Tongue%252520Tango/en.lproj</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
 	<string>HolidayCountdown.xcworkspace</string>
@@ -24,9 +24,9 @@
 		<key>20E724B1033E693EC265266FAADA6B1C0589BE5D</key>
 		<string>..</string>
 		<key>c9e4e011-17fd-45d7-a5a7-1b52a25985db++7349</key>
-		<string>../CountDownApp/Classes/Facebook/</string>
+		<string>../CountDownApp/Classes/Facebook</string>
 		<key>ea2ad293-1b71-4273-ab5d-9a81c1c204aa++2374</key>
-		<string>../CountDownApp/en.lproj/</string>
+		<string>../CountDownApp/en.lproj</string>
 	</dict>
 	<key>IDESourceControlProjectRepositoryRootDictionary</key>
 	<dict>

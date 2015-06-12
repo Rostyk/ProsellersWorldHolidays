@@ -362,7 +362,7 @@ static NSString * const kFacebookPermissionsKey = @"ACFacebookPermissionsKey";
              // for og:description
              object[@"description"] = title;
              // for og:url, we cover how this is used in the "Deep Linking" section below
-             object[@"url"] = @"https://itunes.apple.com/app/id581481166?ls=1&mt=8";
+             object[@"url"] = @"https://itunes.apple.com/app/id669398769?ls=1&mt=8";
              // for og:image we assign the image that we just staged, using the uri we got as a response
              // the image has to be packed in a dictionary like this:
              object[@"image"] = @[@{@"url": [result objectForKey:@"uri"], @"user_generated" : @"false" }];
