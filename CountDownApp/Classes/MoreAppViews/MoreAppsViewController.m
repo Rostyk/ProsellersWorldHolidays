@@ -112,6 +112,7 @@
     int nCount = 0;
     if (self.arrayApps) {
         nCount = self.arrayApps.count;
+        nCount = (nCount >=1) ? nCount - 1 : nCount;
     }
     return nCount;
 }

@@ -169,7 +169,6 @@ NSLocale *ENGLISH_LOCALE;
             [tab setImage:[UIImage imageNamed:@"more_normal"] selected:NO];
             [tab setImage:[UIImage imageNamed:@"more_selected"] selected:YES];
         }
-    
     };
     
     [tabBarController setSelectedIndex:0];
