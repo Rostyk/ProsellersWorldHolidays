@@ -319,7 +319,7 @@
             }
 		}
 	}
-	
+//    NSLog(@"test");
 	if (flipNumberView == [mFlipNumberViews lastObject]) {
 		if ([delegate respondsToSelector: @selector(groupedFlipNumberView:willChangeToValue:)])
         {
